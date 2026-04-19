@@ -2,81 +2,81 @@
 
 ## 実装タスク
 
-- [ ] 1. モノレポとツールチェーンの準備
-- [ ] 1.1 API 側の Python 3.14 プロジェクト初期化と最小 HTTP 応答 (P)
+- [x] 1. モノレポとツールチェーンの準備
+- [x] 1.1 API 側の Python 3.14 プロジェクト初期化と最小 HTTP 応答 (P)
   - `uv` で依存をロックし、単一パッケージがインストール可能である。
   - 開発起動後、ヘルス用の HTTP リクエストに対して **200 と JSON 本文**が返る。
   - `requires-python` が設計どおり **3.14 系に制限**されている。
   - _Requirements: 1, 2, 3, 4, 5, 6, 7_
   - _Boundary: apps/api composition root, presentation routers_
-- [ ] 1.2 Web 側の Vite + React + TypeScript strict 初期化 (P)
+- [x] 1.2 Web 側の Vite + React + TypeScript strict 初期化 (P)
   - `pnpm` でロックファイルが生成され、`pnpm dev` でブラウザに画面が表示される。
   - TypeScript が **strict（`any` 禁止）**でビルドを通過する。
   - _Requirements: 6_
   - _Boundary: apps/web presentation_
-- [ ] 1.3 リポジトリルートの運用ファイル整備
+- [x] 1.3 リポジトリルートの運用ファイル整備
   - ルート README に API・Web の起動手順が書かれている。
   - `.gitignore` にローカル DB ファイル等が含まれ、誤コミットされない。
   - _Requirements: 6_
   - _Depends: 1.1, 1.2_
 
-- [ ] 2. ドメイン層（エンティティと抽象）
-- [ ] 2.1 コアエンティティとドメイン例外の定義
+- [x] 2. ドメイン層（エンティティと抽象）
+- [x] 2.1 コアエンティティとドメイン例外の定義
   - 人材・面談・テンプレ版・抽出実行・プロフィールスナップショットが、識別子と主要属性を持つ形で表現されている。
   - 想定外状態用のドメイン例外が区別できる（HTTP へのマッピングは後続層）。
   - _Requirements: 1, 2, 3, 4, 5_
   - _Boundary: domain entities, domain exceptions_
-- [ ] 2.2 永続化および推論への抽象（契約）の定義
+- [x] 2.2 永続化および推論への抽象（契約）の定義
   - 人材・面談・テンプレ・抽出・プロフィールについて、永続化操作が **呼び出し意図ごとに列挙**されている。
   - 構造化抽出が **入力・テンプレ・出力の契約**として記述されている。
   - _Requirements: 3, 4, 5_
   - _Boundary: domain abstractions_
   - _Depends: 2.1_
 
-- [ ] 3. インフラストラクチャ永続化（SQLite + ORM + リポジトリ）
-- [ ] 3.1 データベース接続、ORM モデル、初期スキーマの作成
+- [x] 3. インフラストラクチャ永続化（SQLite + ORM + リポジトリ）
+- [x] 3.1 データベース接続、ORM モデル、初期スキーマの作成
   - 設計書の論理モデルに対応するテーブルが作成され、マイグレーションまたは `create_all` 等で **空 DB にスキーマが展開**される。
   - 抽出実行の **セッション ID とステータス**にインデックスが張られ、競合検出に使える。
   - _Requirements: 1, 2, 3, 4, 5_
   - _Boundary: infrastructure persistence_
   - _Depends: 2.1_
-- [ ] 3.2 リポジトリ具象の実装（CRUD と履歴読取）
+- [x] 3.2 リポジトリ具象の実装（CRUD と履歴読取）
   - 人材の作成・取得・更新、面談の追加・一覧、テンプレ版の登録・取得が **DB 上で往復**できる。
   - 抽出実行の作成・状態更新・単件取得、プロフィールスナップショットの追加・一覧が **DB 上で往復**できる。
   - _Requirements: 1, 2, 3, 4, 5_
   - _Boundary: infrastructure persistence_
   - _Depends: 2.2, 3.1_
 
-- [ ] 4. インフラストラクチャ推論（MLX ゲートウェイ）
-- [ ] 4.1 StructuredExtractionGateway の MLX 実装と設定連携
+- [x] 4. インフラストラクチャ推論（MLX ゲートウェイ）
+- [x] 4.1 StructuredExtractionGateway の MLX 実装と設定連携
   - 検証済みテンプレと面談テキストを渡すと、**JSON 構造体**が返り、モデル識別子とプロンプト指紋が付与される。
   - 既定構成で **外部ネットワークを呼ばない**（失敗時はドメインが解釈できる例外に変換可能）。
   - _Requirements: 4, 6_
   - _Boundary: infrastructure inference_
   - _Depends: 2.2_
 
-- [ ] 5. アプリケーションサービス（ユースケース）
-- [ ] 5.1 人材および面談セッションのユースケース実装
+- [x] 5. アプリケーションサービス（ユースケース）
+- [x] 5.1 人材および面談セッションのユースケース実装
   - 新規人材登録後に **永続化された識別子**で再取得できる。
   - 面談テキストの保存・一覧が、紐づく人材コンテキストで **整合した順序**で取得できる。
   - 存在しない人材 ID では **判別可能な失敗**になる。
   - _Requirements: 1, 2_
   - _Boundary: application services talent, interview_
   - _Depends: 3.2_
-- [ ] 5.2 テンプレート登録・参照と YAML 検証のユースケース実装
+- [x] 5.2 テンプレート登録・参照と YAML 検証のユースケース実装
   - 構文または必須項目が不正な YAML は **登録が拒否**され、修正に使える情報が返る。
   - 登録済みテンプレが **バージョンとともに**一覧・単体参照できる。
   - _Requirements: 3_
   - _Boundary: application services template_
   - _Depends: 3.2_
-- [ ] 5.3 抽出実行のユースケース（競合排他・失敗ハンドリング）
+- [x] 5.3 抽出実行のユースケース（競合排他・失敗ハンドリング）
   - 同一面談セッションで実行中の抽出があるとき、新規開始は **拒否**され、運用者が理由を理解できる。
   - 成功時、抽出結果に **入力およびテンプレ版の追跡情報**が付く。
   - 推論失敗時、実行レコードが **失敗状態**で残り、再試行判断ができる。
   - _Requirements: 4_
   - _Boundary: application services extraction_
   - _Depends: 3.2, 4.1_
-- [ ] 5.4 プロフィール反映と履歴のユースケース実装
+- [x] 5.4 プロフィール反映と履歴のユースケース実装
   - 抽出結果の反映後、人材参照で **マージ後のプロフィール**が観察できる。
   - 複数面談由来の情報が **セッション単位で説明可能**に残る。
   - 不正な反映内容は **拒否**され、判断用の情報が返る。
@@ -85,66 +85,66 @@
   - _Boundary: application services profile_
   - _Depends: 5.3_
 
-- [ ] 6. プレゼンテーション API（ルーター・DTO・OpenAPI）
-- [ ] 6.1 人材・面談・テンプレの HTTP 表面の実装
+- [x] 6. プレゼンテーション API（ルーター・DTO・OpenAPI）
+- [x] 6.1 人材・面談・テンプレの HTTP 表面の実装
   - OpenAPI に **POST/GET/PATCH の契約**が現れ、サンプルリクエストで人材と面談とテンプレが作成できる。
   - ステータスコードが要件（404/422 等）と **一貫**する。
   - _Requirements: 1, 2, 3_
   - _Boundary: presentation routers, presentation schemas_
   - _Depends: 5.1, 5.2_
-- [ ] 6.2 抽出・プロフィール・エクスポートの HTTP 表面の実装
+- [x] 6.2 抽出・プロフィール・エクスポートの HTTP 表面の実装
   - 抽出 POST が **201 と run 識別子**を返し、GET で状態と結果が追える。
   - プロフィール反映 POST が **反映後の表現**を返す。
   - JSON/HTML エクスポートが **ダウンロード可能な表現**で返り、根拠に必要な ID が含まれる。
   - _Requirements: 4, 5, 6_
   - _Boundary: presentation routers exports_
   - _Depends: 5.3, 5.4_
-- [ ] 6.3 composition root での依存注入とアプリ組み立て
+- [x] 6.3 composition root での依存注入とアプリ組み立て
   - 単一エントリポイントから **全ルータとサービス**が束ねられ、手動または自動起動で API が立ち上がる。
   - CORS 等、ローカルで Web から API を叩くのに必要な **最小設定**が有効になる。
   - _Requirements: 1, 2, 3, 4, 5, 6_
   - _Boundary: apps/api main composition_
   - _Depends: 6.1, 6.2_
 
-- [ ] 7. Web プレゼンテーション（最小 UI）
-- [ ] 7.1 HTTP クライアントとルーティング骨格
+- [x] 7. Web プレゼンテーション（最小 UI）
+- [x] 7.1 HTTP クライアントとルーティング骨格
   - 画面遷移が **ルート定義に沿って**行われ、API 基底 URL が設定で切り替わる。
   - 共通の fetch ラッパが **422/409 を判別可能**に伝播する。
   - _Requirements: 6_
   - _Boundary: apps/web infrastructure http, presentation routes_
   - _Depends: 1.2, 6.3_
-- [ ] 7.2 人材一覧・登録と面談・抽出・反映の画面フロー
+- [x] 7.2 人材一覧・登録と面談・抽出・反映の画面フロー
   - 画面操作のみで **人材作成 → 面談投入 → テンプレ選択 → 抽出 → 反映**まで完遂できる。
   - エラー時にユーザー向けメッセージが表示される。
   - _Requirements: 1, 2, 3, 4, 5, 6_
   - _Boundary: apps/web presentation pages_
   - _Depends: 7.1_
-- [ ] 7.3 テンプレ画面とデモヘルプ画面
+- [x] 7.3 テンプレ画面とデモヘルプ画面
   - テンプレ YAML を UI から登録・一覧できる。
   - デモ手順書への導線と、根拠表示に必要な **リンクまたは要約**が画面に存在する。
   - _Requirements: 3, 6_
   - _Boundary: apps/web presentation pages_
   - _Depends: 7.1_
 
-- [ ] 8. 対象外機能の明示とデモ再現性の仕上げ
-- [ ] 8.1 対象外ドメインの HTTP 非提供の確認
+- [x] 8. 対象外機能の明示とデモ再現性の仕上げ
+- [x] 8.1 対象外ドメインの HTTP 非提供の確認
   - 発注・案件・マッチング等に見えるパスが **定義されていない**、または常に対象外を示す。
   - _Requirements: 7_
   - _Boundary: presentation routers_
   - _Depends: 6.3_
-- [ ] 8.2 デモ手順書とサンプルテンプレの整備
+- [x] 8.2 デモ手順書とサンプルテンプレの整備
   - 手順書に従うと **同一操作列で同じ観察結果**に到達できると記述されている。
   - サンプル YAML がリポジトリに含まれ、登録手順が手順書と一致する。
   - _Requirements: 6_
   - _Depends: 7.2, 7.3_
 
-- [ ] 9. 自動テストと横断検証
-- [ ] 9.1 API ユニット・サービス層のテスト
+- [x] 9. 自動テストと横断検証
+- [x] 9.1 API ユニット・サービス層のテスト
   - テンプレ検証失敗、抽出競合、プロフィールマージ拒否が **自動テストで赤緑確認**できる。
   - _Requirements: 3, 4, 5_
   - _Boundary: application services, domain_
   - _Depends: 5.1, 5.2, 5.3, 5.4_
-- [ ] 9.2 API 結合テスト（主要 REST チェーン）
+- [x] 9.2 API 結合テスト（主要 REST チェーン）
   - テストが **人材→面談→テンプレ→抽出完了→反映**のチェーンを単独で通せる。
   - _Requirements: 1, 2, 3, 4, 5, 6_
   - _Boundary: presentation routers_
@@ -154,3 +154,9 @@
   - _Requirements: 6_
   - _Boundary: apps/web presentation_
   - _Depends: 7.2_
+
+## Implementation Notes
+
+- 推論: 既定は **スタブ**（外部ネットワーク不使用）。`TIP_USE_MLX=1` かつ `mlx-lm` が import 可能なときのみ `mlx_runtime.MlxLmStructuredExtractionGateway` を試し、失敗時はスタブへフォールバック。Docker 等では `TIP_FORCE_STUB_INFERENCE=1` を推奨。
+- PoC UI の人材一覧のため、設計表にない **`GET /talents`** を追加（一覧のみ `latest_profile_json` は返さない）。
+- テスト用 DB は `TIP_DATABASE_URL` が未設定のとき `pytest_configure` で一時 SQLite に固定する（`apps/api/tests/conftest.py`）。

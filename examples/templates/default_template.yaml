@@ -1,0 +1,7 @@
+# PoC 用サンプル（design の File Structure Plan に沿う）
+version: "1.0.0-poc"
+fields:
+  summary: string
+  skills:
+    type: array
+    items: string
