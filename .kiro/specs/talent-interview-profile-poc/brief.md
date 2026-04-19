@@ -8,8 +8,8 @@
 
 ## Current State
 
-- アプリケーション実装は未着手に近い。steering（product / tech / structure）はあるが技術スタックは未確定。
-- 仕様は未作成。PoC は **近親者レベル** の利用想定で、本番の金銭・契約は扱わない。
+- **API（FastAPI）・最小 Web UI（Vite + React）・SQLite** を含む PoC アプリケーションがリポジトリに実装されている。詳細な契約と境界は **`.kiro/specs/talent-interview-profile-poc/`**（要件・設計・タスク）および steering（product / tech / structure）に記載する。
+- PoC は **近親者レベル** の利用想定で、本番の金銭・契約は扱わない。
 
 ## Desired Outcome
 

@@ -10,7 +10,7 @@
 
 **利用者**: PoC 運用者（データ入力・抽出・反映）、営業役員（閲覧・評価）。
 
-**影響**: リポジトリに **API（Python・レイヤード構成）**、**Web フロント（TypeScript・同趣旨の層分割）**、**SQLite 永続化**、**インフラストラクチャ層のオンデバイス推論（既定: MLX）** を新設する。
+**影響**: リポジトリは **API（Python・レイヤード構成）**、**Web フロント（TypeScript・同趣旨の層分割）**、**SQLite 永続化**、**インフラストラクチャ層の構造化抽出**（`TIP_INFERENCE_ENGINE` で `stub` / ローカル Ollama / ローカル MLX を選択。環境未設定時のコード既定は再現性のため `stub`）を含むモノレポとして保守する。
 
 ### Goals
 
@@ -43,8 +43,8 @@
 ### Allowed Dependencies
 
 - **上流**: 文字起こし済みプレーンテキスト（UTF-8）。最大サイズは設定可能な定数（例: 512KiB）で拒否。
-- **ランタイム**: macOS Apple Silicon を主ターゲットとし、**MLX（`mlx-lm`）** を既定推論。開発用に CPU のみ環境がある場合は明示的に「非推奨」とログする（完全互換は求めない）。
-- **外部ネットワーク**: PoC 既定では **推論にネットワークを要求しない**。
+- **ランタイム**: macOS Apple Silicon を主ターゲットとし、オンデバイス推論として **MLX（`mlx-lm`）** を **`TIP_INFERENCE_ENGINE=mlx`** で利用する。環境変数未設定時は **`stub`** が選ばれ、CI やオフライン検証で外部依存を避ける。ローカルで **Ollama** を選ぶ場合はホスト上の HTTP（例: `docker compose` の `OLLAMA_HOST`）に限定し、**クラウド有償 LLM API を既定経路とはしない**。
+- **外部ネットワーク**: **クラウド推論 API** を既定で呼ばない。`stub` / ローカル MLX / ローカル Ollama はこの方針に含まれる。
 
 ### Revalidation Triggers
 
@@ -68,7 +68,7 @@
 | **プレゼンテーション** | HTTP（FastAPI ルーター）、リクエスト／レスポンス DTO、ステータスコード整形。ビジネスルールを持たない。 |
 | **アプリケーション** | ユースケース単位のオーケストレーション（トランザクション境界、サービス呼び出し順）。 |
 | **ドメイン** | エンティティ、ドメイン例外、不変条件、**リポジトリ／推論への抽象**（Protocol / ABC）。外部 I/O を import しない。 |
-| **インフラストラクチャ** | SQLAlchemy、SQLite、MLX 呼び出し等の具体実装。ドメインの抽象に対して実装を提供する。 |
+| **インフラストラクチャ** | SQLAlchemy、SQLite、推論ゲートウェイ（stub / Ollama / MLX 等）の具体実装。ドメインの抽象に対して実装を提供する。 |
 
 **境界**: **Web（React）↔ API（プレゼンテーション）↔ アプリケーション ↔ ドメイン ← インフラストラクチャ**。ブラウザは REST のみ。API 内では **プレゼンテーション → アプリケーション → ドメイン** の一方向。インフラは **ドメインの抽象に依存**して組み立てる（古典的な依存性逆転）。
 
@@ -81,7 +81,7 @@ flowchart TB
     PRE["プレゼンテーション\n(FastAPI routers, HTTP DTOs)"]
     APP["アプリケーション\n(use case services)"]
     DOM["ドメイン\n(entities, rules, abstractions)"]
-    INF["インフラストラクチャ\n(SQLAlchemy, MLX)"]
+    INF["インフラストラクチャ\n(SQLAlchemy, 推論)"]
   end
   WEB -->|HTTPS JSON| PRE
   PRE --> APP
@@ -104,7 +104,7 @@ flowchart TB
 | Frontend | **Vite 6** + **React 19** + **TypeScript 5.8+（strict）** | 最小 PoC UI | `any` 禁止 |
 | Backend | **Python 3.14**（3.14.x 最新マイナー）+ **FastAPI**（最新安定）+ **Pydantic v2**（最新安定） | REST、検証、オーケストレーション | 型ヒント必須。`requires-python` は `>=3.14,<3.15` を目安にロック |
 | Data | **SQLite** + **SQLAlchemy 2.x**（最新安定） | 永続化 | 単一ファイル `data/poc.db` 想定 |
-| Inference | **MLX / `mlx-lm`（当該時点の最新安定）** 既定 | 構造化抽出 | CoreML は後続スパイク（`research.md`） |
+| Inference | **`TIP_INFERENCE_ENGINE`**（`stub` / `ollama` / `mlx`）+ **`TIP_PROMPT_PROFILE`**。未設定時は **stub**。MLX は Apple Silicon 向けオンデバイス | 構造化抽出 | CoreML は後続スパイク（`research.md`） |
 | Messaging | なし | — | PoC では非採用 |
 | ツールチェーン | **`uv`**（Python）+ **`pnpm`**（Node） | 依存解決・ロック・スクリプト実行 | 下記「パッケージマネージャ」参照 |
 
@@ -346,7 +346,7 @@ class StructuredExtractionGateway:
 
 - **Preconditions**: 入力サイズ上限以内。テンプレは検証済みバージョンを渡す。
 - **Postconditions**: **JSON オブジェクト**（dict）を返す。数値／文字列／配列のみを許容するなど整形ルールは `TemplateService`（アプリケーション層）で後処理してもよい。
-- **Invariants**: 既定実装は外部ネットワークを呼ばない。
+- **Invariants**: **`stub` およびローカル MLX** はクラウド推論 API を呼ばない。**`ollama`** は運用者が提供するローカル（または同一マシン）の HTTP エンドポイントのみを想定する。
 
 **Implementation Notes**
 
@@ -413,7 +413,7 @@ erDiagram
 |------|-----|------|
 | 入力不備 | 空テキスト、YAML 構文エラー | 422 |
 | 状態競合 | 同一セッション二重抽出 | 409 |
-| 推論例外 | MLX 内部エラー | 500 または 422（実装でマッピング方針を固定） |
+| 推論例外 | ゲートウェイ内部エラー（MLX / Ollama 等） | 500 または 422（実装でマッピング方針を固定） |
 
 ### Monitoring
 
@@ -445,7 +445,7 @@ erDiagram
 
 ## Security Considerations
 
-- ネットワーク送信をしない既定推論経路（研究の `research.md` と整合）。
+- **クラウド有償 LLM** への送信を既定としない（コード既定の **`stub`**、およびローカル MLX／ローカル Ollama と整合。研究の `research.md` と整合）。
 - ローカル DB ファイルのアクセス権は OS ユーザーに限定（README に記載）。
 - ログへの **全文ダンプ禁止**（開発時も原則マスク）。
 
