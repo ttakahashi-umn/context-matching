@@ -27,7 +27,13 @@ def list_templates(
 ) -> list[TemplateOut]:
     rows = service.list_all()
     return [
-        TemplateOut(id=r.id, version_label=r.version_label, yaml_text=r.yaml_text, created_at=r.created_at)
+        TemplateOut(
+            id=r.id,
+            version_label=r.version_label,
+            purpose=r.purpose,
+            yaml_text=r.yaml_text,
+            created_at=r.created_at,
+        )
         for r in rows
     ]
 
@@ -38,4 +44,10 @@ def get_template(
     service: Annotated[TemplateService, Depends(get_template_service)],
 ) -> TemplateOut:
     t = service.get(template_id)
-    return TemplateOut(id=t.id, version_label=t.version_label, yaml_text=t.yaml_text, created_at=t.created_at)
+    return TemplateOut(
+        id=t.id,
+        version_label=t.version_label,
+        purpose=t.purpose,
+        yaml_text=t.yaml_text,
+        created_at=t.created_at,
+    )

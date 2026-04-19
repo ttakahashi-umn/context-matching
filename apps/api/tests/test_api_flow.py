@@ -25,7 +25,15 @@ def test_health(client: TestClient) -> None:
 
 
 def test_talent_interview_template_extract_merge_chain(client: TestClient) -> None:
-    r = client.post("/talents", json={"display_name": "Alice"})
+    r = client.post(
+        "/talents",
+        json={
+            "family_name": "山田",
+            "given_name": "太郎",
+            "family_name_kana": "やまだ",
+            "given_name_kana": "たろう",
+        },
+    )
     assert r.status_code == 201
     talent_id = r.json()["id"]
 
@@ -35,6 +43,7 @@ def test_talent_interview_template_extract_merge_chain(client: TestClient) -> No
 
     yaml_text = """
 version: "1.0.0-poc"
+purpose: "結合テスト用の最小テンプレ"
 fields:
   summary: string
 """
@@ -73,9 +82,19 @@ fields:
     assert r.status_code == 200
     export = r.json()
     assert export["talent"]["id"] == talent_id
+    assert export["talent"]["family_name"] == "山田"
+    assert export["talent"]["display_label"] == "山田 太郎"
     assert any(er["extraction_runs"] for er in export["interviews"])
 
 
 def test_invalid_template_yaml(client: TestClient) -> None:
     r = client.post("/templates", json={"yaml_text": "not: yaml: ["})
+    assert r.status_code == 422
+
+
+def test_template_requires_purpose_in_yaml(client: TestClient) -> None:
+    r = client.post(
+        "/templates",
+        json={"yaml_text": 'version: "x"\nfields: {a: 1}\n'},
+    )
     assert r.status_code == 422

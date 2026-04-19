@@ -34,7 +34,7 @@ def export_talent_html(
     service: Annotated[ExportService, Depends(get_export_service)],
 ) -> HTMLResponse:
     payload = service.build_talent_export(talent_id)
-    title = escape(str(payload["talent"]["display_name"]))
+    title = escape(str(payload["talent"]["display_label"]))
     interviews = payload["interviews"]
     snapshots = payload["profile_snapshots"]
     parts: list[str] = [

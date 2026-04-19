@@ -68,7 +68,11 @@ class ExportService:
         return {
             "talent": {
                 "id": str(talent.id),
-                "display_name": talent.display_name,
+                "family_name": talent.family_name,
+                "given_name": talent.given_name,
+                "family_name_kana": talent.family_name_kana,
+                "given_name_kana": talent.given_name_kana,
+                "display_label": talent.display_label,
                 "created_at": talent.created_at.isoformat(),
             },
             "interviews": interview_payload,

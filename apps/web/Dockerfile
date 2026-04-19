@@ -13,6 +13,7 @@ RUN if [ -f pnpm-lock.yaml ]; then pnpm install --frozen-lockfile; else pnpm ins
 
 COPY index.html vite.config.ts tsconfig.json ./
 COPY src ./src
+COPY public ./public
 
 EXPOSE 5173
 

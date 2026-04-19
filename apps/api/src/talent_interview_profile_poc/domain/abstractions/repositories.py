@@ -14,10 +14,24 @@ from talent_interview_profile_poc.domain.enums import ExtractionStatus
 
 
 class TalentRepository(Protocol):
-    def create(self, display_name: str) -> Talent: ...
+    def create(
+        self,
+        family_name: str,
+        given_name: str,
+        family_name_kana: str,
+        given_name_kana: str,
+    ) -> Talent: ...
     def get_by_id(self, talent_id: UUID) -> Talent | None: ...
     def list_all(self) -> list[Talent]: ...
-    def update_display_name(self, talent_id: UUID, display_name: str) -> Talent | None: ...
+    def update_partial(
+        self,
+        talent_id: UUID,
+        *,
+        family_name: str | None = None,
+        given_name: str | None = None,
+        family_name_kana: str | None = None,
+        given_name_kana: str | None = None,
+    ) -> Talent | None: ...
 
 
 class InterviewRepository(Protocol):
@@ -27,7 +41,7 @@ class InterviewRepository(Protocol):
 
 
 class TemplateRepository(Protocol):
-    def create(self, version_label: str, yaml_text: str) -> TemplateVersion: ...
+    def create(self, version_label: str, purpose: str, yaml_text: str) -> TemplateVersion: ...
     def list_all(self) -> list[TemplateVersion]: ...
     def get_by_id(self, template_id: UUID) -> TemplateVersion | None: ...
 

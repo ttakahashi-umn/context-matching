@@ -17,6 +17,14 @@ def _extract_version_label(parsed: dict[str, Any]) -> str:
     return "0.0.0"
 
 
+def _extract_purpose(parsed: dict[str, Any]) -> str:
+    """ルート必須キー `purpose`（用途の人間可読説明）。"""
+    p = parsed.get("purpose")
+    if not isinstance(p, str) or not p.strip():
+        raise DomainValidationError("root key 'purpose' (用途) must be a non-empty string")
+    return p.strip()
+
+
 def _assert_json_like_mapping(obj: Any, path: str = "$") -> None:
     """テンプレート YAML がマッピング根であり、値が過度に複雑でないことを軽く検査する。"""
     if not isinstance(obj, dict):
@@ -40,7 +48,7 @@ class TemplateService:
     def __init__(self, templates: TemplateRepository) -> None:
         self._templates = templates
 
-    def validate_yaml_structure(self, yaml_text: str) -> tuple[dict[str, Any], str]:
+    def validate_yaml_structure(self, yaml_text: str) -> tuple[dict[str, Any], str, str]:
         try:
             loaded = yaml.safe_load(yaml_text)
         except yaml.YAMLError as exc:
@@ -49,11 +57,12 @@ class TemplateService:
             raise DomainValidationError("yaml must not be empty")
         _assert_json_like_mapping(loaded)
         label = _extract_version_label(loaded)
-        return loaded, label
+        purpose = _extract_purpose(loaded)
+        return loaded, label, purpose
 
     def register(self, yaml_text: str) -> TemplateVersion:
-        _, label = self.validate_yaml_structure(yaml_text)
-        return self._templates.create(label, yaml_text)
+        _, label, purpose = self.validate_yaml_structure(yaml_text)
+        return self._templates.create(label, purpose, yaml_text)
 
     def list_all(self) -> list[TemplateVersion]:
         return self._templates.list_all()

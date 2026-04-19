@@ -41,9 +41,13 @@ def test_extraction_conflict_when_running(session: Session) -> None:
     interviews = SqlAlchemyInterviewRepository(session)
     templates = SqlAlchemyTemplateRepository(session)
     extractions = SqlAlchemyExtractionRepository(session)
-    t = talents.create("Bob")
+    t = talents.create("佐藤", "花子", "さとう", "はなこ")
     inv = interviews.create(t.id, "hello world")
-    tv = templates.create("v1", "version: '1'\nkey: value")
+    tv = templates.create(
+        "v1",
+        "競合テスト用",
+        "version: '1'\npurpose: '競合テスト用'\nkey: value",
+    )
     session.commit()
 
     row = ExtractionRunORM(
@@ -71,9 +75,13 @@ def test_profile_merge_rejects_non_completed(session: Session) -> None:
     interviews = SqlAlchemyInterviewRepository(session)
     extractions = SqlAlchemyExtractionRepository(session)
     profiles = SqlAlchemyProfileRepository(session)
-    t = talents.create("Carol")
+    t = talents.create("鈴木", "一郎", "すずき", "いちろう")
     inv = interviews.create(t.id, "text")
-    tv = SqlAlchemyTemplateRepository(session).create("v1", "version: '1'\na: 1")
+    tv = SqlAlchemyTemplateRepository(session).create(
+        "v1",
+        "マージ拒否テスト用",
+        "version: '1'\npurpose: 'マージ拒否テスト用'\na: 1",
+    )
     run = extractions.create(inv.id, tv.id, ExtractionStatus.FAILED, "hash")
     session.commit()
 

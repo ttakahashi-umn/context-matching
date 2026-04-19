@@ -18,5 +18,6 @@ class TemplateRegistered(BaseModel):
 class TemplateOut(BaseModel):
     id: UUID
     version_label: str
+    purpose: str
     yaml_text: str
     created_at: datetime

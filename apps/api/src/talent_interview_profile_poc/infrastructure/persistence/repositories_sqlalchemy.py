@@ -23,7 +23,14 @@ from talent_interview_profile_poc.infrastructure.persistence.orm_models import (
 
 
 def _talent_from_row(row: TalentORM) -> Talent:
-    return Talent(id=row.id, display_name=row.display_name, created_at=row.created_at)
+    return Talent(
+        id=row.id,
+        family_name=row.family_name,
+        given_name=row.given_name,
+        family_name_kana=row.family_name_kana,
+        given_name_kana=row.given_name_kana,
+        created_at=row.created_at,
+    )
 
 
 def _interview_from_row(row: InterviewSessionORM) -> InterviewSession:
@@ -39,6 +46,7 @@ def _template_from_row(row: TemplateVersionORM) -> TemplateVersion:
     return TemplateVersion(
         id=row.id,
         version_label=row.version_label,
+        purpose=row.purpose,
         yaml_text=row.yaml_text,
         created_at=row.created_at,
     )
@@ -73,8 +81,19 @@ class SqlAlchemyTalentRepository:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create(self, display_name: str) -> Talent:
-        row = TalentORM(display_name=display_name)
+    def create(
+        self,
+        family_name: str,
+        given_name: str,
+        family_name_kana: str,
+        given_name_kana: str,
+    ) -> Talent:
+        row = TalentORM(
+            family_name=family_name,
+            given_name=given_name,
+            family_name_kana=family_name_kana,
+            given_name_kana=given_name_kana,
+        )
         self._session.add(row)
         self._session.flush()
         return _talent_from_row(row)
@@ -88,11 +107,26 @@ class SqlAlchemyTalentRepository:
         rows = self._session.scalars(stmt).all()
         return [_talent_from_row(r) for r in rows]
 
-    def update_display_name(self, talent_id: UUID, display_name: str) -> Talent | None:
+    def update_partial(
+        self,
+        talent_id: UUID,
+        *,
+        family_name: str | None = None,
+        given_name: str | None = None,
+        family_name_kana: str | None = None,
+        given_name_kana: str | None = None,
+    ) -> Talent | None:
         row = self._session.get(TalentORM, talent_id)
         if row is None:
             return None
-        row.display_name = display_name
+        if family_name is not None:
+            row.family_name = family_name
+        if given_name is not None:
+            row.given_name = given_name
+        if family_name_kana is not None:
+            row.family_name_kana = family_name_kana
+        if given_name_kana is not None:
+            row.given_name_kana = given_name_kana
         self._session.flush()
         return _talent_from_row(row)
 
@@ -125,8 +159,8 @@ class SqlAlchemyTemplateRepository:
     def __init__(self, session: Session) -> None:
         self._session = session
 
-    def create(self, version_label: str, yaml_text: str) -> TemplateVersion:
-        row = TemplateVersionORM(version_label=version_label, yaml_text=yaml_text)
+    def create(self, version_label: str, purpose: str, yaml_text: str) -> TemplateVersion:
+        row = TemplateVersionORM(version_label=version_label, purpose=purpose, yaml_text=yaml_text)
         self._session.add(row)
         self._session.flush()
         return _template_from_row(row)

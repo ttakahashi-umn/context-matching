@@ -11,8 +11,16 @@ from talent_interview_profile_poc.domain.enums import ExtractionStatus
 @dataclass(frozen=True, slots=True)
 class Talent:
     id: UUID
-    display_name: str
+    family_name: str
+    given_name: str
+    family_name_kana: str
+    given_name_kana: str
     created_at: datetime
+
+    @property
+    def display_label(self) -> str:
+        """一覧・エクスポート用の簡易表示（姓 名）。"""
+        return f"{self.family_name} {self.given_name}".strip()
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,6 +35,7 @@ class InterviewSession:
 class TemplateVersion:
     id: UUID
     version_label: str
+    purpose: str
     yaml_text: str
     created_at: datetime
 

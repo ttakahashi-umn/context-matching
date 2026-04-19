@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from talent_interview_profile_poc.domain.exceptions import DomainError
+from talent_interview_profile_poc.infrastructure.persistence.database import get_session_factory
 from talent_interview_profile_poc.infrastructure.persistence.schema import init_db
 from talent_interview_profile_poc.presentation.error_handlers import domain_error_handler
+from talent_interview_profile_poc.seed import ensure_seed_templates
 from talent_interview_profile_poc.presentation.routers import (
     exports,
     extractions,
@@ -17,10 +20,20 @@ from talent_interview_profile_poc.presentation.routers import (
     templates,
 )
 
+_logger = logging.getLogger(__name__)
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     init_db()
+    SessionLocal = get_session_factory()
+    with SessionLocal() as session:
+        try:
+            ensure_seed_templates(session)
+            session.commit()
+        except Exception:
+            session.rollback()
+            _logger.exception("テンプレートシードに失敗しました（API は起動を続行します）")
     yield
 
 

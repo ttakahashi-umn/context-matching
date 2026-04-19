@@ -42,7 +42,7 @@
 2. When PoC 運用者が既存人材の識別子を指定して参照する, the Talent Interview Profile PoC shall 直近で保存されている人材情報を返す。
 3. When PoC 運用者が既存人材の識別子を指定して属性更新を完了する, the Talent Interview Profile PoC shall 更新後の値が以降の参照で観察できる。
 4. If 指定された識別子に対応する人材が存在しない, the Talent Interview Profile PoC shall 存在しないことを運用者が判別できる形で示す。
-5. The Talent Interview Profile PoC shall 少なくとも表示名（または同等の人間可読ラベル）を人材ごとに保持する。
+5. The Talent Interview Profile PoC shall 人材ごとに **姓・名**および**読み仮名（姓・名）**を保持し、一覧等で人間可読な表示（例: 姓と名の結合）に利用できる。
 
 ### Requirement 2: 面談セッションと文字起こしテキストの取り込み
 
@@ -98,6 +98,7 @@
 2. When 営業役員が提示物（最小 PoC UI、または構造化データのエクスポート、実行ログ、静的サマリのいずれか）を閲覧する, the Talent Interview Profile PoC shall 抽出観点と根拠となった面談テキストの対応関係が追える説明を提供する。
 3. The Talent Interview Profile PoC shall コア業務（人材の登録、面談テキストの取り込み、テンプレート登録、抽出実行、プロフィールの参照および抽出結果の反映）を、**単一の最小 PoC UI** から主要フローとして完遂できる。
 4. The Talent Interview Profile PoC shall **本番運用を前提とした多機能な運営コンソール**（テナント管理、複雑な権限モデル、高度なワークフロー自動化など）を提供しない。
+5. The Talent Interview Profile PoC shall **人材一覧画面およびテンプレート一覧画面**では登録済みエンティティの **一覧を主表示**とし、新規登録 UI は **登録ボタン操作により画面右からスライドインするパネル**で提供する（一覧の上に登録フォームを常設しない）。
 
 ### Requirement 7: 明示的対象外の拒否または未提供
 

@@ -177,6 +177,7 @@ apps/
 │       │   │   ├── TemplatesPage.tsx
 │       │   │   └── DemoHelpPage.tsx
 │       │   └── components/
+│       │       └── RegisterSlideOver.tsx
 │       ├── application/
 │       │   └── hooks/
 │       └── infrastructure/
@@ -246,7 +247,7 @@ stateDiagram-v2
 | 3 | YAML テンプレ | `application/services/template_service`, `presentation/routers/templates` | REST `/templates` | テンプレ検証 |
 | 4 | 抽出実行 | `application/services/extraction_service`, `infrastructure/inference/mlx_llm_gateway` | REST `/extractions`, `StructuredExtractionGateway` | 上記シーケンス |
 | 5 | プロフィール反映・履歴 | `application/services/profile_service`, `presentation/routers/profiles` | REST `/profiles/...` | マージフロー |
-| 6 | デモ再現・説明 | `presentation/routers/exports`, `presentation/pages/DemoHelpPage`, `docs/demo/*.md` | REST `/exports`, UI | 静的サマリ生成 |
+| 6 | デモ再現・説明 | `presentation/routers/exports`, `presentation/pages/DemoHelpPage`, `TalentsPage`, `TemplatesPage`, `components/RegisterSlideOver`, `docs/demo/*.md` | REST `/exports`, UI | 静的サマリ生成 |
 | 7 | 対象外拒否 | ルート非提供 + アプリケーション層のガード | — | — |
 
 ## Components and Interfaces
@@ -258,7 +259,7 @@ stateDiagram-v2
 | エンティティ・例外 | ドメイン | 不変条件と意味 | 1–5 | なし（抽象のみ） | 純ドメイン |
 | `repositories_sqlalchemy` | インフラストラクチャ | ORM 永続化 | 1–5 | SQLite, SQLAlchemy | `*Repository` Protocol |
 | `mlx_llm_gateway` | インフラストラクチャ | オンデバイス推論 | 4 | mlx-lm | `StructuredExtractionGateway` |
-| `presentation/pages/*` | プレゼンテーション（Web） | 最小画面 | 1–6 | `infrastructure/http/client` | props 型 |
+| `presentation/pages/*`, `presentation/components/RegisterSlideOver` | プレゼンテーション（Web） | 最小画面・一覧＋右スライド登録 | 1–6 | `infrastructure/http/client` | props 型 |
 
 ### プレゼンテーション（API）
 
@@ -285,12 +286,12 @@ stateDiagram-v2
 
 | Method | Path | Request | Response | Errors |
 |--------|------|---------|----------|--------|
-| POST | `/talents` | `{display_name}` | `{id, display_name}` | 422 |
+| POST | `/talents` | `{family_name, given_name, family_name_kana, given_name_kana}` | Talent（`display_label` 含む） | 422 |
 | GET | `/talents/{id}` | — | Talent | 404 |
-| PATCH | `/talents/{id}` | 部分更新 | Talent | 404, 422 |
+| PATCH | `/talents/{id}` | 上記の部分フィールド（1 つ以上） | Talent | 404, 422 |
 | POST | `/talents/{id}/interviews` | `{transcript_text}` | `{interview_session_id}` | 404, 422 |
 | GET | `/talents/{id}/interviews` | — | list | 404 |
-| POST | `/templates` | `{yaml_text}` | `{template_version_id, semver}` | 422 |
+| POST | `/templates` | `{yaml_text}`（ルートに **`purpose`** 必須） | `{template_version_id, semver}` | 422 |
 | GET | `/templates` | — | list | — |
 | POST | `/extractions` | `{interview_session_id, template_version_id}` | `{extraction_run_id, status}` | 404, 409, 422 |
 | GET | `/extractions/{run_id}` | — | ExtractionRun | 404 |
@@ -346,16 +347,17 @@ class StructuredExtractionGateway:
 
 **Implementation Notes**
 
-- フォーム送信後のトースト／エラーメッセージで **422/409** を人間可読に。
+- **人材一覧**（`TalentsPage`）および**テンプレート一覧**（`TemplatesPage`）では **一覧を主画面**とし、新規登録は **「登録」系ボタン押下で右からスライドインするパネル**（`RegisterSlideOver`）内のフォームで行う。一覧の上に常設の登録フォームは置かない。
+- フォーム送信後のトースト／エラーメッセージで **422/409** を人間可読に（パネル内または一覧下に表示）。
 - `TalentDetailPage` に **根拠リンク**（どの面談・どの抽出 run か）を表示し、要件 6.2 を満たす。
 
 ## Data Models
 
 ### Domain Model
 
-- **Talent**: `id`（UUID）、`display_name`、`created_at`。
+- **Talent**: `id`（UUID）、`family_name`、`given_name`、`family_name_kana`、`given_name_kana`、`created_at`。API 応答では一覧用に `display_label`（「姓 名」）を返す。
 - **InterviewSession**: `id`, `talent_id`, `transcript_text`（原文）、`created_at`。
-- **TemplateVersion**: `id`, `semver_or_label`, `yaml_text`, `created_at`。
+- **TemplateVersion**: `id`, `semver_or_label`, **`purpose`**（用途・一覧表示）, `yaml_text`, `created_at`。
 - **ExtractionRun**: `id`, `interview_session_id`, `template_version_id`, `status`（`pending|running|completed|failed`）、`result_json`、`error_message`、`input_hash`、`model_id`、`prompt_fingerprint`、`created_at`。
 - **ProfileSnapshot**: `id`, `talent_id`, `merged_profile_json`, `source_extraction_run_id`, `created_at`。
 
@@ -376,7 +378,7 @@ erDiagram
 
 ### Physical Data Model（SQLite）
 
-- テーブル: `talents`, `interview_sessions`, `template_versions`, `extraction_runs`, `profile_snapshots`。
+- テーブル: `talents`（`family_name`, `given_name`, `family_name_kana`, `given_name_kana`）、`interview_sessions`, `template_versions`, `extraction_runs`, `profile_snapshots`。
 - インデックス: `extraction_runs(interview_session_id, status)` で `running` 検索を高速化。
 - **マイグレーション**: PoC では `create_all` または Alembic 導入は実装タスクで選択（設計上はスキーマ差分をコミット可能にする）。
 

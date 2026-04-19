@@ -1,95 +1,48 @@
-import { useEffect, useState } from "react";
-import { NavLink, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Navigate, Route, Routes } from "react-router-dom";
 import { DemoHelpPage } from "./presentation/pages/DemoHelpPage";
 import { TalentDetailPage } from "./presentation/pages/TalentDetailPage";
 import { TalentsPage } from "./presentation/pages/TalentsPage";
 import { TemplatesPage } from "./presentation/pages/TemplatesPage";
 import { paths } from "./presentation/routes/paths";
 
-type HealthResponse = { status: string };
-
-const navStyle = ({ isActive }: { isActive: boolean }) => ({
-  marginRight: "1rem",
-  fontWeight: isActive ? 700 : 400,
-  color: isActive ? "#0a58ca" : "#333",
-});
+function menuItemClass({ isActive }: { isActive: boolean }): string {
+  return [
+    "block rounded-md px-3 py-2 text-sm font-medium transition-colors",
+    isActive ? "bg-slate-200 text-slate-900" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900",
+  ].join(" ");
+}
 
 export function App() {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const res = await fetch("/api/health");
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        const body = (await res.json()) as HealthResponse;
-        if (!cancelled) {
-          setHealth(body);
-        }
-      } catch (e) {
-        if (!cancelled) {
-          setError(e instanceof Error ? e.message : String(e));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   return (
-    <main style={{ fontFamily: "system-ui", padding: "2rem", maxWidth: "960px" }}>
-      <header style={{ marginBottom: "1.5rem" }}>
-        <h1 style={{ marginTop: 0 }}>Talent Interview Profile PoC</h1>
-        <nav>
-          <NavLink to={paths.home} end style={navStyle}>
-            ホーム
-          </NavLink>
-          <NavLink to={paths.talents} style={navStyle}>
+    <div className="flex min-h-screen bg-white text-slate-900 antialiased">
+      <aside className="flex w-52 shrink-0 flex-col border-r border-slate-200 bg-slate-50">
+        <nav className="flex flex-1 flex-col gap-0.5 p-3" aria-label="メインメニュー">
+          <NavLink to={paths.talents} className={menuItemClass}>
             人材
           </NavLink>
-          <NavLink to={paths.templates} style={navStyle}>
+          <NavLink to={paths.templates} className={menuItemClass}>
             テンプレート
           </NavLink>
-          <NavLink to={paths.demo} style={navStyle}>
-            デモ手順
-          </NavLink>
         </nav>
-        <p style={{ color: "#555", fontSize: "0.9rem" }}>
-          API プロキシ: <code>/api</code> → バックエンド
-          {health && (
-            <>
-              {" "}
-              · <code>/health</code>: <strong>{health.status}</strong>
-            </>
-          )}
-          {error && (
-            <>
-              {" "}
-              · <span style={{ color: "crimson" }}>API: {error}</span>
-            </>
-          )}
-        </p>
-      </header>
-
-      <Routes>
-        <Route
-          path={paths.home}
-          element={
-            <section>
-              <p>左のナビからフローを開始してください。</p>
-            </section>
-          }
-        />
-        <Route path={paths.talents} element={<TalentsPage />} />
-        <Route path="/talents/:talentId" element={<TalentDetailPage />} />
-        <Route path={paths.templates} element={<TemplatesPage />} />
-        <Route path={paths.demo} element={<DemoHelpPage />} />
-      </Routes>
-    </main>
+        <div className="border-t border-slate-200 px-3 py-2">
+          <Link
+            to={paths.demo}
+            className="text-[10px] leading-tight text-slate-400 hover:text-slate-500"
+            title="デモの流れ（補助）"
+          >
+            デモ手順
+          </Link>
+        </div>
+      </aside>
+      <main className="min-w-0 flex-1 overflow-auto p-6">
+        <Routes>
+          <Route path="/" element={<Navigate to={paths.talents} replace />} />
+          <Route path={paths.talents} element={<TalentsPage />} />
+          <Route path="/talents/:talentId" element={<TalentDetailPage />} />
+          <Route path={paths.templates} element={<TemplatesPage />} />
+          <Route path={paths.demo} element={<DemoHelpPage />} />
+        </Routes>
+      </main>
+    </div>
   );
 }

@@ -20,7 +20,10 @@ class TalentORM(Base):
     __tablename__ = "talents"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    display_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    family_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    given_name: Mapped[str] = mapped_column(String(64), nullable=False)
+    family_name_kana: Mapped[str] = mapped_column(String(128), nullable=False)
+    given_name_kana: Mapped[str] = mapped_column(String(128), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     interviews: Mapped[list[InterviewSessionORM]] = relationship(back_populates="talent")
@@ -45,6 +48,7 @@ class TemplateVersionORM(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     version_label: Mapped[str] = mapped_column(String(64), nullable=False)
+    purpose: Mapped[str] = mapped_column(String(512), nullable=False)
     yaml_text: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 

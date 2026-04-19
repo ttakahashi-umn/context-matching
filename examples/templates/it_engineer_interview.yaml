@@ -1,0 +1,33 @@
+# API 起動時シードと同一内容（`apps/api/.../seed/it_engineer_interview.yaml`）。
+# 手動登録のコピー用。version は DB のテンプレ版ラベルになる。
+version: "seed-it-engineer-v1"
+purpose: "IT エンジニア面談の観点テンプレ（採用・キャリア面談の文字起こし向け）"
+meta:
+  title: "IT エンジニア面談（汎用）"
+  audience: "採用・キャリア面談の文字起こし"
+extraction_targets:
+  career_summary:
+    prompt_hint: "職歴の要約（年数・領域・規模感）"
+  tech_stack:
+    prompt_hint: "得意言語・FW・クラウド・DB・メッセージング等"
+  system_design:
+    prompt_hint: "設計経験（API・ドメインモデル・データモデル・可用性）"
+  implementation_practice:
+    prompt_hint: "実装・レビュー・テスト・CI/CD・リリース運用"
+  reliability_ops:
+    prompt_hint: "障害対応・監視・SRE 的観点・パフォーマンス"
+  security_privacy:
+    prompt_hint: "セキュリティ意識（認可・秘密情報・コンプライアンス）"
+  collaboration:
+    prompt_hint: "チーム開発・ステークホルダ調整・ドキュメント文化"
+  leadership_mentoring:
+    prompt_hint: "リード経験・メンタリング・意思決定への関与"
+  learning_motivation:
+    prompt_hint: "学習習慣・技術選定の考え方・中長期の志向"
+  concerns_or_constraints:
+    prompt_hint: "希望条件・制約・転職理由のニュアンス（個人情報は要マスク）"
+output_hints:
+  format: "各 extraction_targets のキーに対応する短文〜中程度の日本語テキスト"
+  optional_list_fields:
+    - "notable_projects"
+    - "certifications"

@@ -115,12 +115,13 @@
   - _Depends: 1.2, 6.3_
 - [x] 7.2 人材一覧・登録と面談・抽出・反映の画面フロー
   - 画面操作のみで **人材作成 → 面談投入 → テンプレ選択 → 抽出 → 反映**まで完遂できる。
+  - 人材一覧を主画面とし、**人材を登録**で右スライドの登録パネルを開く（要件 6.5）。
   - エラー時にユーザー向けメッセージが表示される。
   - _Requirements: 1, 2, 3, 4, 5, 6_
   - _Boundary: apps/web presentation pages_
   - _Depends: 7.1_
 - [x] 7.3 テンプレ画面とデモヘルプ画面
-  - テンプレ YAML を UI から登録・一覧できる。
+  - テンプレ YAML を UI から登録・一覧できる。一覧を主画面とし、**テンプレートを登録**で右スライドの登録パネルを開く（要件 6.5）。
   - デモ手順書への導線と、根拠表示に必要な **リンクまたは要約**が画面に存在する。
   - _Requirements: 3, 6_
   - _Boundary: apps/web presentation pages_
@@ -160,3 +161,5 @@
 - 推論: 既定は **スタブ**（外部ネットワーク不使用）。`TIP_USE_MLX=1` かつ `mlx-lm` が import 可能なときのみ `mlx_runtime.MlxLmStructuredExtractionGateway` を試し、失敗時はスタブへフォールバック。Docker 等では `TIP_FORCE_STUB_INFERENCE=1` を推奨。
 - PoC UI の人材一覧のため、設計表にない **`GET /talents`** を追加（一覧のみ `latest_profile_json` は返さない）。
 - テスト用 DB は `TIP_DATABASE_URL` が未設定のとき `pytest_configure` で一時 SQLite に固定する（`apps/api/tests/conftest.py`）。
+- 人材は **姓・名・読み仮名（姓・名）** の 4 フィールドで永続化する。スキーマ変更後は既存の `data/*.db` を削除してから `create_all` し直すこと。
+- 人材・テンプレの新規登録 UI は **`presentation/components/RegisterSlideOver.tsx`** を共通化する。

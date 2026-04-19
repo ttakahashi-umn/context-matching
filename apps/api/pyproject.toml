@@ -19,6 +19,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+talent_interview_profile_poc = ["seed/*.yaml"]
+
 [dependency-groups]
 dev = [
     "httpx>=0.28",

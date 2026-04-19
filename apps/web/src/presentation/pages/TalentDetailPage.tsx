@@ -5,7 +5,11 @@ import { paths } from "../routes/paths";
 
 type Talent = {
   id: string;
-  display_name: string;
+  family_name: string;
+  given_name: string;
+  family_name_kana: string;
+  given_name_kana: string;
+  display_label: string;
   created_at: string;
   latest_profile_json: Record<string, unknown> | null;
 };
@@ -20,6 +24,7 @@ type Interview = {
 type TemplateRow = {
   id: string;
   version_label: string;
+  purpose: string;
   yaml_text: string;
   created_at: string;
 };
@@ -44,6 +49,14 @@ type ProfileSnapshot = {
   source_extraction_run_id: string;
   created_at: string;
 };
+
+const btnPrimary =
+  "rounded-md bg-slate-800 px-3 py-1.5 text-sm font-medium text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50";
+const btnSecondary =
+  "rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+const fieldLabel = "mb-1 block text-xs font-medium text-slate-600";
+const selectCls =
+  "min-w-[16rem] rounded-md border border-slate-300 px-2 py-1.5 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500";
 
 export function TalentDetailPage() {
   const { talentId = "" } = useParams();
@@ -191,42 +204,51 @@ export function TalentDetailPage() {
   }
 
   if (!talentId) {
-    return <p>人材 ID がありません。</p>;
+    return <p className="text-sm text-slate-600">人材 ID がありません。</p>;
   }
 
   return (
-    <section>
-      <p>
-        <Link to={paths.talents}>← 一覧へ</Link>
+    <section className="max-w-3xl">
+      <p className="mb-4">
+        <Link to={paths.talents} className="text-sm text-sky-700 hover:underline">
+          ← 人材一覧
+        </Link>
       </p>
-      <h2>{talent?.display_name ?? "読み込み中…"}</h2>
-      <p>
-        人材 ID: <code>{talentId}</code>
+      <h2 className="text-lg font-semibold text-slate-800">{talent?.display_label ?? "読み込み中…"}</h2>
+      {talent && (
+        <p className="mt-0.5 text-sm text-slate-600">
+          よみ: {talent.family_name_kana} {talent.given_name_kana}
+        </p>
+      )}
+      <p className="mt-1 text-xs text-slate-500">
+        ID: <code className="rounded bg-slate-100 px-1">{talentId}</code>
       </p>
       {message && (
-        <p role="alert" style={{ color: "crimson" }}>
+        <p role="alert" className="mt-3 text-sm text-red-600">
           {message}
         </p>
       )}
 
-      <h3>面談</h3>
-      <form onSubmit={addInterview} style={{ marginBottom: "1rem" }}>
+      <h3 className="mb-2 mt-8 text-sm font-semibold uppercase tracking-wide text-slate-500">面談</h3>
+      <form onSubmit={addInterview} className="mb-4 space-y-2">
         <textarea
           value={transcript}
           onChange={(ev) => setTranscript(ev.target.value)}
           rows={5}
-          style={{ width: "100%", maxWidth: "40rem" }}
+          className="w-full max-w-2xl rounded-md border border-slate-300 p-3 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
         />
-        <div style={{ marginTop: "0.5rem" }}>
-          <button type="submit">面談を追加</button>
+        <div>
+          <button type="submit" className={btnPrimary}>
+            面談を追加
+          </button>
         </div>
       </form>
-      <label>
-        対象面談:{" "}
+      <div className="mb-6">
+        <span className={fieldLabel}>対象面談</span>
         <select
           value={selectedInterviewId}
           onChange={(ev) => setSelectedInterviewId(ev.target.value)}
-          style={{ minWidth: "16rem" }}
+          className={selectCls}
         >
           {interviews.map((i) => (
             <option key={i.id} value={i.id}>
@@ -234,67 +256,69 @@ export function TalentDetailPage() {
             </option>
           ))}
         </select>
-      </label>
+      </div>
 
-      <h3 style={{ marginTop: "1.5rem" }}>抽出</h3>
-      <label>
-        テンプレ:{" "}
+      <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">抽出</h3>
+      <div className="mb-2">
+        <span className={fieldLabel}>テンプレ</span>
         <select
           value={selectedTemplateId}
           onChange={(ev) => setSelectedTemplateId(ev.target.value)}
-          style={{ minWidth: "16rem" }}
+          className={selectCls}
         >
           {templates.map((t) => (
             <option key={t.id} value={t.id}>
-              {t.version_label}（{t.id}）
+              {t.purpose} — {t.version_label}（{t.id}）
             </option>
           ))}
         </select>
-      </label>
-      <div style={{ marginTop: "0.5rem" }}>
-        <button type="button" disabled={!canExtract} onClick={() => void runExtraction()}>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={!canExtract} className={btnPrimary} onClick={() => void runExtraction()}>
           抽出実行
         </button>
-        <button type="button" style={{ marginLeft: "0.5rem" }} onClick={() => void mergeProfile()}>
+        <button type="button" className={btnSecondary} onClick={() => void mergeProfile()}>
           プロフィール反映
         </button>
       </div>
       {lastRun && (
-        <div style={{ marginTop: "1rem", padding: "0.75rem", background: "#f6f6f6" }}>
+        <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
           <div>
-            直近の抽出: <code>{lastRun.id}</code> / 状態 <strong>{lastRun.status}</strong>
+            直近の抽出: <code className="text-xs">{lastRun.id}</code> /{" "}
+            <span className="font-medium">{lastRun.status}</span>
           </div>
-          <div>
+          <div className="mt-1 text-xs text-slate-600">
             template_version_id: <code>{lastRun.template_version_id}</code>
           </div>
-          <div>
+          <div className="text-xs text-slate-600">
             interview_session_id: <code>{lastRun.interview_session_id}</code>
           </div>
-          <div>
+          <div className="text-xs text-slate-600">
             input_hash: <code>{lastRun.input_hash}</code>
           </div>
           {lastRun.result_json && (
-            <pre style={{ marginTop: "0.5rem", fontSize: "0.85rem" }}>
+            <pre className="mt-2 max-h-64 overflow-auto rounded bg-white p-2 font-mono text-xs text-slate-800 ring-1 ring-slate-200">
               {JSON.stringify(lastRun.result_json, null, 2)}
             </pre>
           )}
         </div>
       )}
 
-      <h3 style={{ marginTop: "1.5rem" }}>マージ済みプロフィール</h3>
+      <h3 className="mb-2 mt-8 text-sm font-semibold uppercase tracking-wide text-slate-500">マージ済みプロフィール</h3>
       {talent?.latest_profile_json ? (
-        <pre style={{ background: "#f6f6f6", padding: "0.75rem" }}>
+        <pre className="max-h-80 overflow-auto rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-800">
           {JSON.stringify(talent.latest_profile_json, null, 2)}
         </pre>
       ) : (
-        <p>まだ反映されていません。</p>
+        <p className="text-sm text-slate-500">まだ反映されていません。</p>
       )}
 
-      <h3 style={{ marginTop: "1.5rem" }}>反映履歴</h3>
-      <ul>
+      <h3 className="mb-2 mt-8 text-sm font-semibold uppercase tracking-wide text-slate-500">反映履歴</h3>
+      <ul className="divide-y divide-slate-200 rounded-md border border-slate-200 text-sm">
         {history.map((h) => (
-          <li key={h.id}>
-            <code>{h.id}</code> ← extraction <code>{h.source_extraction_run_id}</code>（{h.created_at}）
+          <li key={h.id} className="px-3 py-2 hover:bg-slate-50">
+            <code className="text-xs">{h.id}</code> ← <code className="text-xs">{h.source_extraction_run_id}</code>
+            <span className="ml-2 text-xs text-slate-500">{h.created_at}</span>
           </li>
         ))}
       </ul>

@@ -3,25 +3,32 @@ import { paths } from "../routes/paths";
 
 export function DemoHelpPage() {
   return (
-    <section>
-      <h2>デモ手順</h2>
-      <ol style={{ lineHeight: 1.6 }}>
+    <section className="max-w-2xl text-sm text-slate-600">
+      <h2 className="mb-4 text-base font-medium text-slate-700">デモ手順</h2>
+      <ol className="list-decimal space-y-2 pl-5 leading-relaxed">
         <li>
-          <Link to={paths.talents}>人材一覧</Link>で人材を作成する。
+          <Link to={paths.talents} className="text-sky-700 hover:underline">
+            人材
+          </Link>
+          で「人材を登録」から右パネルを開き、フォームで登録する。
         </li>
         <li>人材詳細で面談テキストを投入する。</li>
         <li>
-          <Link to={paths.templates}>テンプレート</Link>で YAML を登録する（未登録なら）。
+          <Link to={paths.templates} className="text-sky-700 hover:underline">
+            テンプレート
+          </Link>
+          で「テンプレートを登録」から右パネルを開き、YAML を登録する（未登録なら）。
         </li>
-        <li>詳細画面でテンプレを選び「抽出実行」→ 完了後「プロフィール反映」。</li>
+        <li>詳細でテンプレを選び「抽出実行」→ 完了後「プロフィール反映」。</li>
         <li>
-          根拠確認: 画面に表示される <code>interview_session_id</code> / <code>extraction_run_id</code> /{" "}
-          <code>template_version_id</code> をメモする。
+          根拠: 画面上の <code className="rounded bg-slate-100 px-1 text-xs">interview_session_id</code> /{" "}
+          <code className="rounded bg-slate-100 px-1 text-xs">extraction_run_id</code> /{" "}
+          <code className="rounded bg-slate-100 px-1 text-xs">template_version_id</code>
         </li>
       </ol>
-      <p>
-        API の JSON エクスポート: <code>GET /exports/talents/&lt;id&gt;.json</code>（プロキシ経由は{" "}
-        <code>/api/exports/talents/&lt;id&gt;.json</code>）。
+      <p className="mt-4 text-xs text-slate-500">
+        JSON エクスポート: <code className="rounded bg-slate-100 px-1">GET /exports/talents/&lt;id&gt;.json</code>（
+        <code className="rounded bg-slate-100 px-1">/api/exports/…</code>）
       </p>
     </section>
   );

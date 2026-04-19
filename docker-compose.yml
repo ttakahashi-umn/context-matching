@@ -7,6 +7,23 @@ services:
       - "8000:8000"
     environment:
       TIP_ENV: development
+      # 非 editable インストールのまま、ホストのソースを優先して読み込む
+      PYTHONPATH: /app/src
+    volumes:
+      # ホストの変更をコンテナ内に即反映（uvicorn --reload と併用）
+      - ./apps/api/src:/app/src
+    command:
+      - uv
+      - run
+      - uvicorn
+      - talent_interview_profile_poc.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /app/src
     healthcheck:
       test:
         [
@@ -32,3 +49,11 @@ services:
     environment:
       # Vite のサーバー側プロキシ先（同一 compose ネットワーク内のサービス名）
       VITE_API_PROXY_TARGET: http://api:8000
+      # Docker Desktop 等で bind mount の変更検知が遅い場合向け
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./apps/web/src:/app/src
+      - ./apps/web/public:/app/public
+      - ./apps/web/vite.config.ts:/app/vite.config.ts
+      - ./apps/web/index.html:/app/index.html
+      - ./apps/web/tsconfig.json:/app/tsconfig.json
