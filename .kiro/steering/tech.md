@@ -2,7 +2,11 @@
 
 ## アーキテクチャ
 
-**`talent-interview-profile-poc`**（`apps/api` / `apps/web`）は **実装済み**のモノレポ構成である。レイヤ境界・REST・推論ゲートウェイの詳細は **`.kiro/specs/talent-interview-profile-poc/design.md`** を正とする。リポジトリ内の **他プロダクト領域**（マッチング本丸など）のスタックは本ファイルでは未確定のまま追記できる。
+**`talent-interview-profile-poc`**（`apps/api` / `apps/web`）は **実装済み**のモノレポ構成である。レイヤ境界・REST・推論ゲートウェイの詳細は **`.kiro/specs/talent-interview-profile-poc/design.md`** を正とする。
+
+**`project-registration-poc`**（案件マスタの最小縦割り）は **仕様済み・実装はこれから** である。同一モノレポ内に **`project_registration` パッケージ**（案）を追加し、REST `/cases` と最小 Web を **既存 FastAPI アプリへマウント**する方針。詳細は **`.kiro/specs/project-registration-poc/design.md`** を正とする。
+
+リポジトリ内の **他プロダクト領域**（マッチング本丸など）のスタックは本ファイルでは未確定のまま追記できる。
 
 ## コア技術（上記 PoC の実態・2026 時点）
 

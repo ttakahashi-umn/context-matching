@@ -12,13 +12,13 @@
 
 **場所**: リポジトリルート  
 **目的**: 人間向けの概要・ライセンス・エージェント向けの永続メモ。  
-**例**: `README.md`、`LICENSE`、`AGENTS.md`
+**例**: `README.md`、`LICENSE`、`AGENTS.md`、ルート `Makefile`
 
 ### プロジェクト記憶（steering）
 
 **場所**: `.kiro/steering/`  
 **目的**: プロダクト方針・技術標準・ディレクトリ規約など、リポジトリ全体の「記憶」。  
-**例**: `product.md`、`tech.md`、`structure.md`、必要に応じたカスタム steering
+**例**: `product.md`、`tech.md`、`structure.md`、必要に応じたカスタム steering。機能ごとの境界は **`.kiro/specs/<feature>/design.md`**（例: `talent-interview-profile-poc`、`project-registration-poc`）で追う。
 
 ### 仕様（specs）
 
