@@ -1,0 +1,23 @@
+[project]
+name = "talent-interview-profile-poc"
+version = "0.1.0"
+description = "PoC API for talent interview profile extraction"
+readme = "README.md"
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28",
+    "pytest>=8.3",
+]

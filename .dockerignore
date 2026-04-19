@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Python
+**/__pycache__
+**/*.py[cod]
+**/.venv
+**/.ruff_cache
+**/.mypy_cache
+**/.pytest_cache
+**/dist
+**/*.egg-info
+
+# Node
+**/node_modules
+**/dist
+**/.pnpm-store
+
+# Local data & IDE
+data/
+.idea
+.vscode
+.cursor
+
+# Docs / specs (不要ならビルドコンテキストから除外)
+.kiro
