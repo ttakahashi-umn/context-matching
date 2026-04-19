@@ -159,7 +159,7 @@
   - _Requirements: 1, 2, 3, 4, 5, 6_
   - _Boundary: presentation routers_
   - _Depends: 6.3, 9.1_
-- [ ] 9.3* E2E（Playwright 等）によるハッピーパス（任意・MVP 後でも可）
+- [x] 9.3* E2E（Playwright 等）によるハッピーパス（任意・MVP 後でも可）
   - ブラウザ自動操作で **主要 UI フローが緑**になる。
   - _Requirements: 6_
   - _Boundary: apps/web presentation_
@@ -172,3 +172,4 @@
 - テスト用 DB は `TIP_DATABASE_URL` が未設定のとき `pytest_configure` で一時 SQLite に固定する（`apps/api/tests/conftest.py`）。
 - 人材は **姓・名・読み仮名（姓・名）** の 4 フィールドで永続化する。スキーマ変更後は既存の `data/*.db` を削除してから `create_all` し直すこと。
 - 人材・テンプレの新規登録 UI は **`presentation/components/RegisterSlideOver.tsx`** を共通化する。
+- E2E: `pnpm test:e2e:install` のあと `apps/web` で `pnpm test:e2e`。`PLAYWRIGHT_BROWSERS_PATH=0` でブラウザを `node_modules` 配下に置き CI と揃える。スライドオーバーは閉じても `role="dialog"` が DOM に残るため、成功判定はダイアログ非表示ではなく **一覧リンクの出現**に寄せる。

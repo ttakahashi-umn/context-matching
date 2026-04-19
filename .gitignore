@@ -21,3 +21,7 @@ data/
 .DS_Store
 .idea/
 .vscode/
+
+# Playwright (apps/web)
+apps/web/playwright-report/
+apps/web/test-results/
