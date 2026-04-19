@@ -1,0 +1,64 @@
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      TIP_ENV: development
+      TIP_INFERENCE_ENGINE: ollama
+      TIP_PROMPT_PROFILE: ja_flat_json
+      # ホスト macOS で起動した Ollama（例: メニューバーの Ollama）へ接続。事前に `ollama pull llama3.2` を実行しておくこと。
+      OLLAMA_HOST: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3.2
+      # 非 editable インストールのまま、ホストのソースを優先して読み込む
+      PYTHONPATH: /app/src
+    volumes:
+      # ホストの変更をコンテナ内に即反映（uvicorn --reload と併用）
+      - ./apps/api/src:/app/src
+    command:
+      - uv
+      - run
+      - uvicorn
+      - talent_interview_profile_poc.main:app
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /app/src
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      # Vite のサーバー側プロキシ先（同一 compose ネットワーク内のサービス名）
+      VITE_API_PROXY_TARGET: http://api:8000
+      # Docker Desktop 等で bind mount の変更検知が遅い場合向け
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./apps/web/src:/app/src
+      - ./apps/web/public:/app/public
+      - ./apps/web/vite.config.ts:/app/vite.config.ts
+      - ./apps/web/index.html:/app/index.html
+      - ./apps/web/tsconfig.json:/app/tsconfig.json

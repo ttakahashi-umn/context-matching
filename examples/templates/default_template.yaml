@@ -1,0 +1,8 @@
+# PoC 用の最小サンプル（構文確認用）。実運用に近い観点は `it_engineer_interview.yaml` を参照。
+version: "1.0.0-poc"
+purpose: "PoC 用の構文確認・最小サンプル"
+fields:
+  summary: string
+  skills:
+    type: array
+    items: string
