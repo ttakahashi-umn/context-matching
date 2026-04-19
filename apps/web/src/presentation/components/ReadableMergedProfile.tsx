@@ -95,7 +95,7 @@ type Props = {
 
 export function ReadableMergedProfile({ data, className = "" }: Props) {
   return (
-    <div className={`max-h-96 overflow-y-auto text-sm ${className}`}>
+    <div className={`min-w-0 text-sm ${className}`}>
       <ProfileRecord record={data} depth={0} />
     </div>
   );
