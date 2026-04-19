@@ -28,6 +28,10 @@ extraction_targets:
     prompt_hint: "希望条件・制約・転職理由のニュアンス（個人情報は要マスク）"
 output_hints:
   format: "各 extraction_targets のキーに対応する短文〜中程度の日本語テキスト"
+  llm_json_shape: >-
+    LLM 抽出時はルートをフラットに: template_version_id（UUID文字列）に加え、
+    extraction_targets の各キー（career_summary 等）をルート直下に置き、値は日本語の短文文字列のみ。
+    meta / version / purpose / extraction_targets の入れ子オブジェクトは出力しない。
   optional_list_fields:
     - "notable_projects"
     - "certifications"

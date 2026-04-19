@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14,<3.15"
 dependencies = [
     "fastapi>=0.115",
+    "httpx>=0.28",
     "uvicorn[standard]>=0.34",
     "sqlalchemy>=2.0",
     "pydantic>=2.13",
@@ -24,6 +25,5 @@ talent_interview_profile_poc = ["seed/*.yaml"]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28",
     "pytest>=8.3",
 ]

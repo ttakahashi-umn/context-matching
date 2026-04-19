@@ -98,3 +98,40 @@ def test_template_requires_purpose_in_yaml(client: TestClient) -> None:
         json={"yaml_text": 'version: "x"\nfields: {a: 1}\n'},
     )
     assert r.status_code == 422
+
+
+def test_template_patch_updates_yaml(client: TestClient) -> None:
+    yaml_a = 'version: "patch-v"\npurpose: "更新前"\nfields:\n  a: 1\n'
+    r = client.post("/templates", json={"yaml_text": yaml_a})
+    assert r.status_code == 201
+    tid = r.json()["template_version_id"]
+
+    yaml_b = 'version: "patch-v"\npurpose: "更新後"\nfields:\n  a: 2\n'
+    r2 = client.patch(f"/templates/{tid}", json={"yaml_text": yaml_b})
+    assert r2.status_code == 200
+    body = r2.json()
+    assert body["purpose"] == "更新後"
+    assert body["yaml_text"] == yaml_b
+
+    r3 = client.get(f"/templates/{tid}")
+    assert r3.status_code == 200
+    assert r3.json()["purpose"] == "更新後"
+
+
+def test_template_patch_version_label_conflict(client: TestClient) -> None:
+    r1 = client.post(
+        "/templates",
+        json={"yaml_text": 'version: "label-one"\npurpose: "p1"\nfields: {x: 1}\n'},
+    )
+    r2 = client.post(
+        "/templates",
+        json={"yaml_text": 'version: "label-two"\npurpose: "p2"\nfields: {x: 2}\n'},
+    )
+    assert r1.status_code == 201 and r2.status_code == 201
+    id1 = r1.json()["template_version_id"]
+
+    r = client.patch(
+        f"/templates/{id1}",
+        json={"yaml_text": 'version: "label-two"\npurpose: "ぶつける"\nfields: {x: 3}\n'},
+    )
+    assert r.status_code == 409

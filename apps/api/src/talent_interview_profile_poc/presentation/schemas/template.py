@@ -10,6 +10,12 @@ class TemplateCreate(BaseModel):
     yaml_text: str = Field(min_length=1)
 
 
+class TemplateUpdate(BaseModel):
+    """既存テンプレート行の YAML を置き換える（`version` ラベルは他行と重複不可）。"""
+
+    yaml_text: str = Field(min_length=1)
+
+
 class TemplateRegistered(BaseModel):
     template_version_id: UUID
     semver: str

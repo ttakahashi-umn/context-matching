@@ -174,6 +174,28 @@ class SqlAlchemyTemplateRepository:
         row = self._session.get(TemplateVersionORM, template_id)
         return _template_from_row(row) if row else None
 
+    def get_by_version_label(self, version_label: str) -> TemplateVersion | None:
+        stmt = select(TemplateVersionORM).where(TemplateVersionORM.version_label == version_label)
+        row = self._session.scalars(stmt).first()
+        return _template_from_row(row) if row else None
+
+    def update_by_id(
+        self,
+        template_id: UUID,
+        *,
+        version_label: str,
+        purpose: str,
+        yaml_text: str,
+    ) -> TemplateVersion | None:
+        row = self._session.get(TemplateVersionORM, template_id)
+        if row is None:
+            return None
+        row.version_label = version_label
+        row.purpose = purpose
+        row.yaml_text = yaml_text
+        self._session.flush()
+        return _template_from_row(row)
+
 
 class SqlAlchemyExtractionRepository:
     def __init__(self, session: Session) -> None:

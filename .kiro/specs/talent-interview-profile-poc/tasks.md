@@ -55,6 +55,13 @@
   - _Boundary: infrastructure inference_
   - _Depends: 2.2_
 
+- [x] 4.2 推論エンジン選択とプロンプトビルダ抽象（`TIP_INFERENCE_ENGINE` / `TIP_PROMPT_PROFILE`）
+  - 運用者が **stub / ollama / mlx** を環境で切り替えられる。Ollama 専用の HTTP・モデル名はゲートウェイに閉じ、**system / user の文言**は `StructuredExtractionPromptBuilder` と `prompt_builders` に集約する。
+  - プロンプト指紋に **プロンプトプロファイル識別子**を含め、再現性の説明に利用できる。
+  - _Requirements: 4（AC 5, 6）_
+  - _Boundary: infrastructure inference_
+  - _Depends: 4.1_
+
 - [x] 5. アプリケーションサービス（ユースケース）
 - [x] 5.1 人材および面談セッションのユースケース実装
   - 新規人材登録後に **永続化された識別子**で再取得できる。
@@ -66,6 +73,7 @@
 - [x] 5.2 テンプレート登録・参照と YAML 検証のユースケース実装
   - 構文または必須項目が不正な YAML は **登録が拒否**され、修正に使える情報が返る。
   - 登録済みテンプレが **バージョンとともに**一覧・単体参照できる。
+  - 既存行に対する **YAML 更新（PATCH）**が検証・`version` ラベル衝突検出のうえで反映される（要件 3 の追加受入基準：更新・衝突拒否）。
   - _Requirements: 3_
   - _Boundary: application services template_
   - _Depends: 3.2_
@@ -116,12 +124,13 @@
 - [x] 7.2 人材一覧・登録と面談・抽出・反映の画面フロー
   - 画面操作のみで **人材作成 → 面談投入 → テンプレ選択 → 抽出 → 反映**まで完遂できる。
   - 人材一覧を主画面とし、**人材を登録**で右スライドの登録パネルを開く（要件 6.5）。
+  - **人材詳細**（`TalentDetailPage`）は **左右 50:50** の二分割：左に識別情報・枠なしのマージ済みプロフィール、右に面談登録・抽出・反映・**面談履歴**（反映履歴の直上）・プロフィール反映履歴。狭い幅では **縦積み**（要件 6.6）。
   - エラー時にユーザー向けメッセージが表示される。
   - _Requirements: 1, 2, 3, 4, 5, 6_
   - _Boundary: apps/web presentation pages_
   - _Depends: 7.1_
 - [x] 7.3 テンプレ画面とデモヘルプ画面
-  - テンプレ YAML を UI から登録・一覧できる。一覧を主画面とし、**テンプレートを登録**で右スライドの登録パネルを開く（要件 6.5）。
+  - テンプレ YAML を UI から登録・一覧できる。一覧を主画面とし、**テンプレートを登録**で右スライドの登録パネルを開く（要件 6.5）。各行から **確認・編集**で既存 YAML を表示し **PATCH** で保存できる（要件 3 の更新受入基準）。
   - デモ手順書への導線と、根拠表示に必要な **リンクまたは要約**が画面に存在する。
   - _Requirements: 3, 6_
   - _Boundary: apps/web presentation pages_
@@ -158,7 +167,7 @@
 
 ## Implementation Notes
 
-- 推論: 既定は **スタブ**（外部ネットワーク不使用）。`TIP_USE_MLX=1` かつ `mlx-lm` が import 可能なときのみ `mlx_runtime.MlxLmStructuredExtractionGateway` を試し、失敗時はスタブへフォールバック。Docker 等では `TIP_FORCE_STUB_INFERENCE=1` を推奨。
+- 推論: **`TIP_INFERENCE_ENGINE`**（`stub` / `ollama` / `mlx`）と **`TIP_PROMPT_PROFILE`**（例: `ja_flat_json`）でエンジンとプロンプト組み立てを選択。`StructuredExtractionPromptBuilder`（ドメイン）と `prompt_builders`（インフラ）で文言を抽象化。従来の `TIP_USE_OLLAMA` / `TIP_USE_MLX` は後方互換で解決に利用可。ルート **`docker compose`** の API は **`OLLAMA_HOST=http://host.docker.internal:11434`** でホスト macOS の Ollama を参照。
 - PoC UI の人材一覧のため、設計表にない **`GET /talents`** を追加（一覧のみ `latest_profile_json` は返さない）。
 - テスト用 DB は `TIP_DATABASE_URL` が未設定のとき `pytest_configure` で一時 SQLite に固定する（`apps/api/tests/conftest.py`）。
 - 人材は **姓・名・読み仮名（姓・名）** の 4 フィールドで永続化する。スキーマ変更後は既存の `data/*.db` を削除してから `create_all` し直すこと。

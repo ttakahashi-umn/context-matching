@@ -46,7 +46,7 @@
 
 - **Context**: 面談テキストからの構造化抽出を Mac 上で完結させたい。
 - **Alternatives Considered**: CoreML のみで完結；クラウド API。
-- **Selected Approach**: ドメインに **`StructuredExtractionGateway`** 抽象を置き、インフラ層の **`mlx_llm_gateway`** がこれを実装する。CoreML は同一抽象の別実装として後続スパイクに回す。
+- **Selected Approach**: ドメインに **`StructuredExtractionGateway`** と **`StructuredExtractionPromptBuilder`** 抽象を置き、インフラ層の **`inference_gateway_factory`** / **`ollama_llm_gateway`** 等が実装する。CoreML は同一抽象の別実装として後続スパイクに回す。
 - **Rationale**: PoC の検証サイクルを短くし、役員デモまでの経路を確保する。
 - **Trade-offs**: CoreML への忠実度は下がるが、「Apple Silicon 上のオンデバイス」という意図は満たしやすい。
 - **Follow-up**: 実装スパイクでモデルサイズ・レイテンシを測定し、`tech.md` を更新する。

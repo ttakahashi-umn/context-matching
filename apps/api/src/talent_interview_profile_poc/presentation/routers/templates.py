@@ -7,7 +7,12 @@ from fastapi import APIRouter, Depends
 
 from talent_interview_profile_poc.application.services.template_service import TemplateService
 from talent_interview_profile_poc.presentation.deps import get_template_service
-from talent_interview_profile_poc.presentation.schemas.template import TemplateCreate, TemplateOut, TemplateRegistered
+from talent_interview_profile_poc.presentation.schemas.template import (
+    TemplateCreate,
+    TemplateOut,
+    TemplateRegistered,
+    TemplateUpdate,
+)
 
 router = APIRouter(prefix="/templates", tags=["templates"])
 
@@ -44,6 +49,22 @@ def get_template(
     service: Annotated[TemplateService, Depends(get_template_service)],
 ) -> TemplateOut:
     t = service.get(template_id)
+    return TemplateOut(
+        id=t.id,
+        version_label=t.version_label,
+        purpose=t.purpose,
+        yaml_text=t.yaml_text,
+        created_at=t.created_at,
+    )
+
+
+@router.patch("/{template_id}")
+def update_template(
+    template_id: UUID,
+    body: TemplateUpdate,
+    service: Annotated[TemplateService, Depends(get_template_service)],
+) -> TemplateOut:
+    t = service.update(template_id, body.yaml_text)
     return TemplateOut(
         id=t.id,
         version_label=t.version_label,

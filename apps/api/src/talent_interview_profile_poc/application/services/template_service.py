@@ -7,7 +7,7 @@ import yaml
 
 from talent_interview_profile_poc.domain.abstractions.repositories import TemplateRepository
 from talent_interview_profile_poc.domain.entities.records import TemplateVersion
-from talent_interview_profile_poc.domain.exceptions import DomainValidationError, NotFoundError
+from talent_interview_profile_poc.domain.exceptions import ConflictError, DomainValidationError, NotFoundError
 
 
 def _extract_version_label(parsed: dict[str, Any]) -> str:
@@ -72,3 +72,21 @@ class TemplateService:
         if t is None:
             raise NotFoundError("template not found")
         return t
+
+    def update(self, template_id: UUID, yaml_text: str) -> TemplateVersion:
+        existing = self._templates.get_by_id(template_id)
+        if existing is None:
+            raise NotFoundError("template not found")
+        _, label, purpose = self.validate_yaml_structure(yaml_text)
+        other = self._templates.get_by_version_label(label)
+        if other is not None and other.id != template_id:
+            raise ConflictError(f"template version_label already in use: {label!r}")
+        updated = self._templates.update_by_id(
+            template_id,
+            version_label=label,
+            purpose=purpose,
+            yaml_text=yaml_text,
+        )
+        if updated is None:
+            raise NotFoundError("template not found")
+        return updated

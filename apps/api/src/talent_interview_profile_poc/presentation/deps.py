@@ -13,7 +13,7 @@ from talent_interview_profile_poc.application.services.profile_service import Pr
 from talent_interview_profile_poc.application.services.talent_service import TalentService
 from talent_interview_profile_poc.application.services.template_service import TemplateService
 from talent_interview_profile_poc.domain.abstractions.inference import StructuredExtractionGateway
-from talent_interview_profile_poc.infrastructure.inference.mlx_llm_gateway import (
+from talent_interview_profile_poc.infrastructure.inference.inference_gateway_factory import (
     build_structured_extraction_gateway,
 )
 from talent_interview_profile_poc.infrastructure.persistence.database import get_session_factory

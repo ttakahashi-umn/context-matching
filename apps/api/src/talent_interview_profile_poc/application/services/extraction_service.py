@@ -82,7 +82,7 @@ class ExtractionService:
                 prompt_fingerprint=None,
             )
             self._session.commit()
-            raise InferenceError("structured extraction failed") from exc
+            raise InferenceError(f"structured extraction failed: {exc}") from exc
 
         updated = self._extractions.update_result(
             run.id,

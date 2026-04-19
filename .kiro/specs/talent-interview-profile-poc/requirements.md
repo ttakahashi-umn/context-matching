@@ -65,6 +65,8 @@
 2. When PoC 運用者がテンプレートの一覧または特定バージョンの内容を参照する, the Talent Interview Profile PoC shall 登録済みの定義を返す。
 3. If 登録された YAML が構文または必須項目の検証に失敗する, the Talent Interview Profile PoC shall 登録を完了させず、運用者が修正できる情報を返す。
 4. The Talent Interview Profile PoC shall 抽出実行がどのテンプレートバージョンに基づいたかを、後から追跡できる形で保持する。
+5. When PoC 運用者が既存のテンプレートバージョン（識別子）に対して YAML の内容を更新する操作を完了する, the Talent Interview Profile PoC shall 検証に成功した内容で当該バージョンの保存定義を置き換え、以降の参照・抽出で更新後の定義が使われる。
+6. If 更新後の YAML が構文・必須項目の検証に失敗する、またはルート `version` に対応するラベルが **別の既存テンプレート行**と衝突する, the Talent Interview Profile PoC shall 更新を完了させず、運用者が修正方針を決められる情報を返す。
 
 ### Requirement 4: 面談テキストからの構造化抽出の実行
 
@@ -76,6 +78,8 @@
 2. If 抽出処理が完了できない, the Talent Interview Profile PoC shall 失敗したことを運用者が判別でき、再試行またはデータ修正の判断ができる情報を返す。
 3. While 抽出が実行中である, the Talent Interview Profile PoC shall 同一セッションに対する競合する更新が起きないよう、運用者が結果の整合性を判断できる状態を維持する。
 4. The Talent Interview Profile PoC shall 生成結果に、どの入力テキストとテンプレートバージョンに基づくかが追跡できる参照情報を含める。
+5. The Talent Interview Profile PoC shall 運用者が **推論エンジン**（例: スタブ、HTTP 経由のローカル LLM、MLX 等）を **環境設定で選択**できる。
+6. The Talent Interview Profile PoC shall 推論エンジンへ渡す **プロンプト（チャットの system / user 等）の組み立て**を、エンジン実装から **抽象（差し替え可能なビルダ）**に分離し、少なくとも **識別子付きプロンプトプロファイル**（例: 言語・JSON 形状の方針）を **環境設定で選択**できる。
 
 ### Requirement 5: 抽出結果の人材プロフィールへの反映
 
@@ -99,6 +103,7 @@
 3. The Talent Interview Profile PoC shall コア業務（人材の登録、面談テキストの取り込み、テンプレート登録、抽出実行、プロフィールの参照および抽出結果の反映）を、**単一の最小 PoC UI** から主要フローとして完遂できる。
 4. The Talent Interview Profile PoC shall **本番運用を前提とした多機能な運営コンソール**（テナント管理、複雑な権限モデル、高度なワークフロー自動化など）を提供しない。
 5. The Talent Interview Profile PoC shall **人材一覧画面およびテンプレート一覧画面**では登録済みエンティティの **一覧を主表示**とし、新規登録 UI は **登録ボタン操作により画面右からスライドインするパネル**で提供する（一覧の上に登録フォームを常設しない）。
+6. The Talent Interview Profile PoC shall **人材詳細画面**を **横方向の二区分（おおむね等幅）**で構成する。**左側**に当該人材の識別情報および **マージ済みプロフィール**（**枠線・箱型の装飾に依存しない**可読表示でよい）を、**右側**に **面談テキストの新規登録**、**抽出およびプロフィール反映**の操作欄、**登録済み面談セッションの履歴一覧**（**プロフィール反映履歴**より上に配置）、ならびに **プロフィール反映履歴** を表示する。**表示幅が狭い**環境では二区分を **縦方向に積み替え**てもよい。
 
 ### Requirement 7: 明示的対象外の拒否または未提供
 

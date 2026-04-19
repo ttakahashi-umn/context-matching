@@ -154,14 +154,20 @@ apps/
 │           │   ├── exceptions.py
 │           │   └── abstractions/
 │           │       ├── repositories.py    # Protocol: TalentRepository 等
-│           │       └── inference.py       # Protocol: StructuredExtractionGateway
+│           │       ├── inference.py       # Protocol: StructuredExtractionGateway
+│           │       └── extraction_prompting.py  # Protocol: StructuredExtractionPromptBuilder
 │           └── infrastructure/
 │               ├── persistence/
 │               │   ├── database.py
 │               │   ├── orm_models.py
 │               │   └── repositories_sqlalchemy.py
 │               └── inference/
-│                   └── mlx_llm_gateway.py
+│                   ├── inference_gateway_factory.py
+│                   ├── prompt_builders.py
+│                   ├── stub_llm_gateway.py
+│                   ├── ollama_llm_gateway.py
+│                   ├── mlx_llm_gateway.py
+│                   └── mlx_runtime.py
 ├── web/
 │   ├── package.json
 │   ├── pnpm-lock.yaml                  # 実装時に生成・コミット
@@ -177,7 +183,8 @@ apps/
 │       │   │   ├── TemplatesPage.tsx
 │       │   │   └── DemoHelpPage.tsx
 │       │   └── components/
-│       │       └── RegisterSlideOver.tsx
+│       │       ├── RegisterSlideOver.tsx
+│       │       └── ReadableMergedProfile.tsx
 │       ├── application/
 │       │   └── hooks/
 │       └── infrastructure/
@@ -244,10 +251,10 @@ stateDiagram-v2
 |-------------|------|--------------|------------|-------|
 | 1 | 人材 CRUD | `application/services/talent_service`, `presentation/routers/talents`, `infrastructure/persistence/repositories_sqlalchemy` | REST `/talents` | — |
 | 2 | 面談取込・一覧 | `application/services/interview_service`, `presentation/routers/interviews` | REST `/talents/{id}/interviews` | 抽出フロー入力 |
-| 3 | YAML テンプレ | `application/services/template_service`, `presentation/routers/templates` | REST `/templates` | テンプレ検証 |
-| 4 | 抽出実行 | `application/services/extraction_service`, `infrastructure/inference/mlx_llm_gateway` | REST `/extractions`, `StructuredExtractionGateway` | 上記シーケンス |
+| 3 | YAML テンプレ | `application/services/template_service`, `presentation/routers/templates` | REST `/templates`（POST/GET/PATCH） | テンプレ検証・更新 |
+| 4 | 抽出実行 | `application/services/extraction_service`, `infrastructure/inference/inference_gateway_factory`, `prompt_builders`, `stub_llm_gateway`, `ollama_llm_gateway`, `mlx_llm_gateway` | REST `/extractions`, `StructuredExtractionGateway`, `StructuredExtractionPromptBuilder` | 上記シーケンス |
 | 5 | プロフィール反映・履歴 | `application/services/profile_service`, `presentation/routers/profiles` | REST `/profiles/...` | マージフロー |
-| 6 | デモ再現・説明 | `presentation/routers/exports`, `presentation/pages/DemoHelpPage`, `TalentsPage`, `TemplatesPage`, `components/RegisterSlideOver`, `docs/demo/*.md` | REST `/exports`, UI | 静的サマリ生成 |
+| 6 | デモ再現・説明 | `presentation/routers/exports`, `presentation/pages/DemoHelpPage`, `TalentsPage`, `TalentDetailPage`, `TemplatesPage`, `components/RegisterSlideOver`, `components/ReadableMergedProfile`, `docs/demo/*.md` | REST `/exports`, UI | 静的サマリ生成 |
 | 7 | 対象外拒否 | ルート非提供 + アプリケーション層のガード | — | — |
 
 ## Components and Interfaces
@@ -258,8 +265,8 @@ stateDiagram-v2
 | `TalentService` 等 | アプリケーション | ユースケースオーケストレーション | 1–6 | ドメイン抽象（Repository / Gateway） | サービス API |
 | エンティティ・例外 | ドメイン | 不変条件と意味 | 1–5 | なし（抽象のみ） | 純ドメイン |
 | `repositories_sqlalchemy` | インフラストラクチャ | ORM 永続化 | 1–5 | SQLite, SQLAlchemy | `*Repository` Protocol |
-| `mlx_llm_gateway` | インフラストラクチャ | オンデバイス推論 | 4 | mlx-lm | `StructuredExtractionGateway` |
-| `presentation/pages/*`, `presentation/components/RegisterSlideOver` | プレゼンテーション（Web） | 最小画面・一覧＋右スライド登録 | 1–6 | `infrastructure/http/client` | props 型 |
+| `inference_gateway_factory` / `prompt_builders` / `stub_llm_gateway` / `ollama_llm_gateway` / `mlx_llm_gateway` / `mlx_runtime` | インフラストラクチャ | 推論エンジン選択・プロンプト組み立て・各ゲートウェイ | 4 | 環境変数・HTTP・mlx-lm | `StructuredExtractionGateway`, `StructuredExtractionPromptBuilder` |
+| `presentation/pages/*`, `presentation/components/RegisterSlideOver`, `ReadableMergedProfile` | プレゼンテーション（Web） | 最小画面・一覧＋右スライド登録・人材詳細二分割 | 1–6 | `infrastructure/http/client` | props 型 |
 
 ### プレゼンテーション（API）
 
@@ -293,6 +300,8 @@ stateDiagram-v2
 | GET | `/talents/{id}/interviews` | — | list | 404 |
 | POST | `/templates` | `{yaml_text}`（ルートに **`purpose`** 必須） | `{template_version_id, semver}` | 422 |
 | GET | `/templates` | — | list | — |
+| GET | `/templates/{id}` | — | TemplateVersion 相当 | 404 |
+| PATCH | `/templates/{id}` | `{yaml_text}`（検証ルールは POST と同一） | TemplateVersion 相当 | 404, 409, 422 |
 | POST | `/extractions` | `{interview_session_id, template_version_id}` | `{extraction_run_id, status}` | 404, 409, 422 |
 | GET | `/extractions/{run_id}` | — | ExtractionRun | 404 |
 | POST | `/profiles/merge` | `{talent_id, extraction_run_id}` | Profile | 404, 422 |
@@ -328,13 +337,20 @@ class StructuredExtractionGateway:
     def infer(self, inp: StructuredExtractionInput) -> StructuredExtractionOutput: ...
 ```
 
+#### StructuredExtractionPromptBuilder（抽象）
+
+| Field | Detail |
+|-------|--------|
+| Intent | テンプレ YAML と面談テキストから、**推論エンジンへ渡すチャット用メッセージ**（system / user 等）を組み立てる。Ollama 専用の文言をゲートウェイ実装に埋め込まない。 |
+| Requirements | 4（環境でプロファイル選択） |
+
 - **Preconditions**: 入力サイズ上限以内。テンプレは検証済みバージョンを渡す。
 - **Postconditions**: **JSON オブジェクト**（dict）を返す。数値／文字列／配列のみを許容するなど整形ルールは `TemplateService`（アプリケーション層）で後処理してもよい。
 - **Invariants**: 既定実装は外部ネットワークを呼ばない。
 
 **Implementation Notes**
 
-- 具体実装は **`infrastructure/inference/mlx_llm_gateway.py`** に置く。温度・top-k 等は **設定**で固定し、再現性（要件 6）に寄与させる。
+- ゲートウェイの組み立ては **`inference_gateway_factory.py`**（`TIP_INFERENCE_ENGINE`）。プロンプト文言は **`prompt_builders.py`**（`TIP_PROMPT_PROFILE`）とドメインの **`extraction_prompting.py`**。Ollama 固有は **`ollama_llm_gateway.py`**（HTTP・`options`・モデル名）に限定。スタブは **`stub_llm_gateway.py`**。MLX は **`mlx_runtime.py`**。温度等は **環境変数**で固定し、再現性（要件 6）に寄与させる。
 
 ### プレゼンテーション（Web）
 
@@ -348,8 +364,9 @@ class StructuredExtractionGateway:
 **Implementation Notes**
 
 - **人材一覧**（`TalentsPage`）および**テンプレート一覧**（`TemplatesPage`）では **一覧を主画面**とし、新規登録は **「登録」系ボタン押下で右からスライドインするパネル**（`RegisterSlideOver`）内のフォームで行う。一覧の上に常設の登録フォームは置かない。
+- **テンプレート一覧**では各行から **確認・編集**を開き、同一パネルで YAML を表示・更新する（`PATCH /templates/{id}`）。`version` ラベルが他行と衝突する更新は **409** で拒否する。
 - フォーム送信後のトースト／エラーメッセージで **422/409** を人間可読に（パネル内または一覧下に表示）。
-- `TalentDetailPage` に **根拠リンク**（どの面談・どの抽出 run か）を表示し、要件 6.2 を満たす。
+- **`TalentDetailPage`** は **左右二分割**（`lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]` で **50:50**、狭い幅では縦積み）とする。**左カラム**に人材識別・登録日時・**マージ済みプロフィール**（`ReadableMergedProfile` で枠なしの人間可読表示）。**右カラム**に面談テキスト登録、テンプレ選択・抽出・反映と直近抽出メタデータ、**面談履歴**（新しい順・抜粋・行選択で抽出対象と同期）、**プロフィール反映履歴**（面談履歴の直下）。要件 **6.2**（根拠の追跡）および **6.6**（レイアウト）を満たす。
 
 ## Data Models
 

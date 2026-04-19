@@ -7,6 +7,11 @@ services:
       - "8000:8000"
     environment:
       TIP_ENV: development
+      TIP_INFERENCE_ENGINE: ollama
+      TIP_PROMPT_PROFILE: ja_flat_json
+      # ホスト macOS で起動した Ollama（例: メニューバーの Ollama）へ接続。事前に `ollama pull llama3.2` を実行しておくこと。
+      OLLAMA_HOST: http://host.docker.internal:11434
+      OLLAMA_MODEL: llama3.2
       # 非 editable インストールのまま、ホストのソースを優先して読み込む
       PYTHONPATH: /app/src
     volumes:
